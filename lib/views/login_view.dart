@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import '../viewmodels/app_viewmodel.dart';
 import '../models/user_model.dart';
+import '../views/register_view.dart';
 
 class LoginView extends StatefulWidget {
+  const LoginView({super.key});
+
   @override
   _LoginViewState createState() => _LoginViewState();
 }
@@ -66,8 +69,13 @@ class _LoginViewState extends State<LoginView> {
               ),
               TextButton(
                 onPressed: () {
+                  // Navega para a tela de cadastro
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const RegisterView()),
+                  );
                 },
-                child: Text("Não tem conta? Cadastre-se"),
+                child: const Text("Não tem conta? Cadastre-se"),
               )
             ],
           ),
