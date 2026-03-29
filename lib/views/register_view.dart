@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../models/user_model.dart';
 import '../viewmodels/app_viewmodel.dart';
 
 class RegisterView extends StatefulWidget {
@@ -11,55 +10,44 @@ class RegisterView extends StatefulWidget {
 
 class _RegisterViewState extends State<RegisterView> {
   final _formKey = GlobalKey<FormState>();
-  
-  // Controladores para capturar o texto digitado
   final _nomeController = TextEditingController();
+  final _raController = TextEditingController();
   final _emailController = TextEditingController();
   final _senhaController = TextEditingController();
 
-  void _cadastrar() {
-    // Valida se todos os campos estão preenchidos corretamente
-    if (_formKey.currentState!.validate()) {
-      
-      // Salva o novo usuário no nosso "banco de dados" (ViewModel)
-      AppViewModel.currentUser = Usuario(
-        nome: _nomeController.text,
-        email: _emailController.text,
-        senha: _senhaController.text,
-      );
-
-      // Mostra uma mensagem de sucesso na parte inferior da tela
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Usuário cadastrado com sucesso!'),
-          backgroundColor: Colors.green,
-        ),
-      );
-
-      // Volta para a tela anterior (Login)
-      Navigator.pop(context);
-    }
+  bool _validarSenhaForte(String senha) {
+    final regex = RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$');
+    return regex.hasMatch(senha);
   }
 
-  // Boa prática: sempre descartar os controllers quando a tela for fechada
-  @override
-  void dispose() {
-    _nomeController.dispose();
-    _emailController.dispose();
-    _senhaController.dispose();
-    super.dispose();
+  void _cadastrar() {
+    if (_formKey.currentState!.validate()) {
+      String? erro = AppViewModel.registrarUsuario(
+        _nomeController.text,
+        _raController.text,
+        _emailController.text,
+        _senhaController.text,
+      );
+
+      if (erro != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(erro), backgroundColor: Colors.red),
+        );
+      } else {
+        // Sucesso
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Conta criada! Faça login.'), backgroundColor: Colors.green),
+        );
+        Navigator.pop(context);
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Criar Conta"),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
-      ),
-      // SingleChildScrollView evita que o teclado cubra os campos de texto
-      body: SingleChildScrollView( 
+      appBar: AppBar(title: const Text("Criar Conta")),
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
@@ -67,28 +55,24 @@ class _RegisterViewState extends State<RegisterView> {
             children: [
               TextFormField(
                 controller: _nomeController,
-                decoration: const InputDecoration(
-                  labelText: "Nome Completo",
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.person),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) return "Informe seu nome";
-                  return null;
-                },
+                decoration: const InputDecoration(labelText: "Nome Completo", border: OutlineInputBorder()),
+                validator: (value) => value == null || value.isEmpty ? "Informe seu nome" : null,
+              ),
+              const SizedBox(height: 15),
+              TextFormField(
+                controller: _raController,
+                decoration: const InputDecoration(labelText: "RA", border: OutlineInputBorder()),
+                keyboardType: TextInputType.number,
+                validator: (value) => value == null || value.isEmpty ? "Informe seu RA" : null,
               ),
               const SizedBox(height: 15),
               TextFormField(
                 controller: _emailController,
-                decoration: const InputDecoration(
-                  labelText: "E-mail",
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.email),
-                ),
+                decoration: const InputDecoration(labelText: "E-mail", border: OutlineInputBorder()),
                 keyboardType: TextInputType.emailAddress,
                 validator: (value) {
                   if (value == null || value.isEmpty) return "Informe seu e-mail";
-                  if (!value.contains("@")) return "E-mail inválido";
+                  if (!value.contains("@") || !value.contains(".")) return "E-mail inválido";
                   return null;
                 },
               ),
@@ -98,11 +82,13 @@ class _RegisterViewState extends State<RegisterView> {
                 decoration: const InputDecoration(
                   labelText: "Senha",
                   border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.lock),
+                  helperText: "Mín. 8 caracteres, 1 Maiúscula, 1 Minúscula, 1 Número e 1 Símbolo",
+                  helperMaxLines: 2,
                 ),
-                obscureText: true, // Esconde a senha com asteriscos
+                obscureText: true,
                 validator: (value) {
-                  if (value == null || value.length < 6) return "Mínimo de 6 caracteres";
+                  if (value == null || value.isEmpty) return "Informe a senha";
+                  if (!_validarSenhaForte(value)) return "A senha não atende aos requisitos de segurança";
                   return null;
                 },
               ),
@@ -112,14 +98,7 @@ class _RegisterViewState extends State<RegisterView> {
                 height: 50,
                 child: ElevatedButton(
                   onPressed: _cadastrar,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                    foregroundColor: Colors.white,
-                  ),
-                  child: const Text(
-                    "Confirmar Cadastro", 
-                    style: TextStyle(fontSize: 16),
-                  ),
+                  child: const Text("Confirmar Cadastro"),
                 ),
               ),
             ],

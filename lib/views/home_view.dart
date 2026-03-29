@@ -1,8 +1,11 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import '../viewmodels/app_viewmodel.dart';
+import '../models/item_model.dart';
 import 'add_item_view.dart';
 import 'edit_profile_view.dart';
-import 'edit_item_view.dart'; // Importação da nova tela de edição
+import 'edit_item_view.dart';
+import 'login_view.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -12,111 +15,111 @@ class HomeView extends StatefulWidget {
 }
 
 class _HomeViewState extends State<HomeView> {
+  
+  void _mostrarContatoDono(ItemPerdido item) {
+    final dono = AppViewModel.buscarUsuarioPorRa(item.ownerRa);
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Entrar em Contato"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("Este item foi cadastrado por:", style: TextStyle(color: Colors.grey[700])),
+            const SizedBox(height: 10),
+            Text("👤 Nome: ${dono?.nome ?? 'Desconhecido'}", style: const TextStyle(fontWeight: FontWeight.bold)),
+            Text("🎓 RA: ${dono?.ra ?? 'N/A'}"),
+            Text("📧 E-mail: ${dono?.email ?? 'N/A'}"),
+            const SizedBox(height: 20),
+            const Text("Envie um e-mail para combinar a devolução/retirada!", style: TextStyle(fontStyle: FontStyle.italic)),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Fechar"),
+          )
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Pega o usuário logado para dar boas-vindas
     final usuario = AppViewModel.currentUser;
-    // Pega a lista de itens
     final itens = AppViewModel.items;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text("Olá, ${usuario?.nome ?? 'Usuário'}!"),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
+        title: const Text("Achados e Perdidos"),
         actions: [
-          // BOTÃO DE EDITAR PERFIL
           IconButton(
-            icon: const Icon(Icons.manage_accounts),
+            icon: const Icon(Icons.person),
+            tooltip: "Editar Perfil",
             onPressed: () async {
-              final atualizou = await Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const EditProfileView()),
-              );
-              
-              if (atualizou == true) {
-                setState(() {});
-              }
+              await Navigator.push(context, MaterialPageRoute(builder: (context) => const EditProfileView()));
+              setState(() {});
             },
           ),
-          // BOTÃO DE LOGOUT
           IconButton(
-            icon: const Icon(Icons.logout),
+            icon: const Icon(Icons.exit_to_app),
+            tooltip: "Sair",
             onPressed: () {
               AppViewModel.currentUser = null;
-              Navigator.pop(context); // Volta pro Login
+              Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LoginView()));
             },
           )
         ],
       ),
       body: itens.isEmpty
-          ? const Center(
-              child: Text(
-                "Nenhum objeto cadastrado ainda.\nClique no + para adicionar.",
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 16, color: Colors.grey),
-              ),
-            )
+          ? const Center(child: Text("Nenhum objeto cadastrado na faculdade ainda."))
           : ListView.builder(
               itemCount: itens.length,
               itemBuilder: (context, index) {
                 final item = itens[index];
-                
+                final isMeuItem = item.ownerRa == usuario?.ra;
+
                 return Card(
                   margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   child: ListTile(
-                    leading: Icon(
-                      item.status ? Icons.search_off : Icons.check_circle,
-                      color: item.status ? Colors.red : Colors.green,
-                      size: 30,
-                    ),
-                    title: Text(
-                      item.nomeItem,
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    subtitle: Text(item.descricaoItem),
+                    leading: item.imagePath != null
+                        ? ClipRRect(
+                            borderRadius: BorderRadius.circular(5),
+                            child: Image.file(File(item.imagePath!), width: 50, height: 50, fit: BoxFit.cover),
+                          )
+                        : Icon(item.status ? Icons.search_off : Icons.check_circle, 
+                               color: item.status ? Colors.red : Colors.green, size: 40),
+                    
+                    title: Text(item.nomeItem, style: const TextStyle(fontWeight: FontWeight.bold)),
+                    subtitle: Text(isMeuItem ? "Cadastrado por você" : "Cadastrado por outro aluno"),
                     trailing: Text(
                       item.status ? "Perdido" : "Achado",
-                      style: TextStyle(
-                        color: item.status ? Colors.red : Colors.green,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: TextStyle(color: item.status ? Colors.red : Colors.green, fontWeight: FontWeight.bold),
                     ),
-                    // ==========================================
-                    // AQUI ESTÁ A PARTE NOVA: O clique no item
-                    // ==========================================
+                    
                     onTap: () async {
-                      // Navega para a tela de edição passando o item e a posição dele na lista (index)
-                      final atualizou = await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => EditItemView(item: item, index: index),
-                        ),
-                      );
-                      
-                      // Se a tela de edição salvou com sucesso e retornou "true", atualizamos a Home
-                      if (atualizou == true) {
-                        setState(() {});
+                      if (isMeuItem) {
+                        final atualizou = await Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => EditItemView(item: item, index: index)),
+                        );
+                        if (atualizou == true) setState(() {});
+                      } else {
+                        _mostrarContatoDono(item);
                       }
                     },
-                    // ==========================================
                   ),
                 );
               },
             ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // Navega para a tela de adicionar item
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const AddItemView()),
-          ).then((_) {
-            // Atualiza a Home quando fechar o cadastro do objeto
-            setState(() {}); 
-          });
+          Navigator.push(context, MaterialPageRoute(builder: (context) => const AddItemView()))
+              .then((_) => setState(() {}));
         },
-        backgroundColor: Colors.blue,
-        child: const Icon(Icons.add, color: Colors.white),
+        child: const Icon(Icons.add),
       ),
     );
   }

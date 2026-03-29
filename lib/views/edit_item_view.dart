@@ -5,8 +5,6 @@ import '../models/item_model.dart';
 class EditItemView extends StatefulWidget {
   final ItemPerdido item;
   final int index;
-
-  // O construtor exige que passemos qual item vamos editar
   const EditItemView({super.key, required this.item, required this.index});
 
   @override
@@ -15,7 +13,6 @@ class EditItemView extends StatefulWidget {
 
 class _EditItemViewState extends State<EditItemView> {
   final _formKey = GlobalKey<FormState>();
-  
   late TextEditingController _nomeController;
   late TextEditingController _descController;
   late bool _isPerdido;
@@ -23,7 +20,6 @@ class _EditItemViewState extends State<EditItemView> {
   @override
   void initState() {
     super.initState();
-    // Preenche os campos com os dados atuais do objeto que veio da Home
     _nomeController = TextEditingController(text: widget.item.nomeItem);
     _descController = TextEditingController(text: widget.item.descricaoItem);
     _isPerdido = widget.item.status;
@@ -31,31 +27,16 @@ class _EditItemViewState extends State<EditItemView> {
 
   void _atualizarItem() {
     if (_formKey.currentState!.validate()) {
-      // Chama a nova função do ViewModel para atualizar o item
-      AppViewModel().editItem(
-        widget.index,
-        _nomeController.text,
-        _descController.text,
-        _isPerdido,
-      );
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Objeto atualizado com sucesso!'),
-          backgroundColor: Colors.green,
-        ),
-      );
-
-      // Volta para a Home avisando que houve alteração (true)
+      AppViewModel().editItem(widget.index, _nomeController.text, _descController.text, _isPerdido);
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Atualizado!'), backgroundColor: Colors.green));
       Navigator.pop(context, true);
     }
   }
 
-  @override
-  void dispose() {
-    _nomeController.dispose();
-    _descController.dispose();
-    super.dispose();
+  void _excluirItem() {
+    AppViewModel().deleteItem(widget.index);
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Objeto excluído!'), backgroundColor: Colors.red));
+    Navigator.pop(context, true);
   }
 
   @override
@@ -63,73 +44,59 @@ class _EditItemViewState extends State<EditItemView> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Editar Objeto"),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.delete),
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text("Excluir objeto?"),
+                  content: const Text("Esta ação não pode ser desfeita."),
+                  actions: [
+                    TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancelar")),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        _excluirItem();
+                      }, 
+                      child: const Text("Excluir", style: TextStyle(color: Colors.red)),
+                    ),
+                  ],
+                ),
+              );
+            },
+          )
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               TextFormField(
                 controller: _nomeController,
-                decoration: const InputDecoration(
-                  labelText: "Nome do Objeto",
-                  border: OutlineInputBorder(),
-                ),
+                decoration: const InputDecoration(labelText: "Nome", border: OutlineInputBorder()),
                 validator: (value) => value == null || value.isEmpty ? "Informe o nome" : null,
               ),
               const SizedBox(height: 15),
               TextFormField(
                 controller: _descController,
                 maxLines: 3,
-                decoration: const InputDecoration(
-                  labelText: "Descrição detalhada",
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) => value == null || value.isEmpty ? "Informe a descrição" : null,
+                decoration: const InputDecoration(labelText: "Descrição", border: OutlineInputBorder()),
               ),
               const SizedBox(height: 20),
-              
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    _isPerdido ? "Status: PERDIDO" : "Status: ACHADO",
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: _isPerdido ? Colors.red : Colors.green,
-                    ),
-                  ),
-                  Switch(
-                    value: _isPerdido,
-                    activeColor: Colors.red,
-                    inactiveThumbColor: Colors.green,
-                    inactiveTrackColor: Colors.green.shade200,
-                    onChanged: (value) {
-                      setState(() {
-                        _isPerdido = value;
-                      });
-                    },
-                  ),
-                ],
+              SwitchListTile(
+                title: Text(_isPerdido ? "PERDIDO" : "ACHADO", style: TextStyle(color: _isPerdido ? Colors.red : Colors.green, fontWeight: FontWeight.bold)),
+                value: _isPerdido,
+                activeColor: Colors.red,
+                onChanged: (value) => setState(() => _isPerdido = value),
               ),
               const SizedBox(height: 30),
-              
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: _atualizarItem,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange, // Cor diferente para edição
-                    foregroundColor: Colors.white,
-                  ),
-                  child: const Text("Salvar Alterações", style: TextStyle(fontSize: 16)),
-                ),
+              ElevatedButton(
+                onPressed: _atualizarItem,
+                child: const Text("Salvar Alterações"),
               ),
             ],
           ),

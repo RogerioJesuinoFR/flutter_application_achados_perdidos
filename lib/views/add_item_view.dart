@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import '../viewmodels/app_viewmodel.dart';
 
 class AddItemView extends StatefulWidget {
@@ -10,104 +12,102 @@ class AddItemView extends StatefulWidget {
 
 class _AddItemViewState extends State<AddItemView> {
   final _formKey = GlobalKey<FormState>();
-  
   final _nomeController = TextEditingController();
   final _descController = TextEditingController();
-  
-  // Variável para controlar se o item é "Perdido" (true) ou "Achado" (false)
   bool _isPerdido = true;
+  
+  File? _image;
+  final ImagePicker _picker = ImagePicker();
+
+  Future<void> _pegarImagem(ImageSource source) async {
+    final pickedFile = await _picker.pickImage(source: source, imageQuality: 50);
+    if (pickedFile != null) {
+      setState(() {
+        _image = File(pickedFile.path);
+      });
+    }
+  }
 
   void _salvarItem() {
     if (_formKey.currentState!.validate()) {
-      // Instancia o ViewModel e adiciona o item
       AppViewModel().addItem(
         _nomeController.text,
         _descController.text,
         _isPerdido,
+        _image?.path,
       );
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Objeto salvo com sucesso!'),
-          backgroundColor: Colors.green,
-        ),
+        const SnackBar(content: Text('Objeto salvo!'), backgroundColor: Colors.green),
       );
-
-      // Volta para a tela Home
       Navigator.pop(context);
     }
   }
 
   @override
-  void dispose() {
-    _nomeController.dispose();
-    _descController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Novo Objeto"),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
-      ),
+      appBar: AppBar(title: const Text("Novo Objeto")),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Container(
+                height: 150,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Colors.grey[200],
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.grey),
+                ),
+                child: _image != null
+                    ? Image.file(_image!, fit: BoxFit.cover)
+                    : const Icon(Icons.image, size: 50, color: Colors.grey),
+              ),
+              const SizedBox(height: 10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: () => _pegarImagem(ImageSource.camera),
+                    icon: const Icon(Icons.camera_alt),
+                    label: const Text("Câmera"),
+                  ),
+                  ElevatedButton.icon(
+                    onPressed: () => _pegarImagem(ImageSource.gallery),
+                    icon: const Icon(Icons.photo_library),
+                    label: const Text("Galeria"),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+
               TextFormField(
                 controller: _nomeController,
-                decoration: const InputDecoration(
-                  labelText: "Nome do Objeto (ex: Chave, Carteira)",
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) return "Informe o nome do objeto";
-                  return null;
-                },
+                decoration: const InputDecoration(labelText: "Nome do Objeto", border: OutlineInputBorder()),
+                validator: (value) => value == null || value.isEmpty ? "Informe o nome" : null,
               ),
               const SizedBox(height: 15),
               TextFormField(
                 controller: _descController,
-                maxLines: 3, // Permite digitar um texto maior
-                decoration: const InputDecoration(
-                  labelText: "Descrição detalhada",
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) return "Informe os detalhes para facilitar";
-                  return null;
-                },
+                maxLines: 3,
+                decoration: const InputDecoration(labelText: "Descrição detalhada", border: OutlineInputBorder()),
+                validator: (value) => value == null || value.isEmpty ? "Informe a descrição" : null,
               ),
               const SizedBox(height: 20),
               
-              // Switch para escolher entre Achado e Perdido
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    _isPerdido ? "Status: PERDIDO" : "Status: ACHADO",
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: _isPerdido ? Colors.red : Colors.green,
-                    ),
+                  Text(_isPerdido ? "Status: PERDIDO" : "Status: ACHADO",
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: _isPerdido ? Colors.red : Colors.green),
                   ),
                   Switch(
                     value: _isPerdido,
                     activeColor: Colors.red,
-                    inactiveThumbColor: Colors.green,
-                    inactiveTrackColor: Colors.green.shade200,
-                    onChanged: (value) {
-                      setState(() {
-                        _isPerdido = value;
-                      });
-                    },
+                    onChanged: (value) => setState(() => _isPerdido = value),
                   ),
                 ],
               ),
@@ -118,11 +118,7 @@ class _AddItemViewState extends State<AddItemView> {
                 height: 50,
                 child: ElevatedButton(
                   onPressed: _salvarItem,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                    foregroundColor: Colors.white,
-                  ),
-                  child: const Text("Salvar Objeto", style: TextStyle(fontSize: 16)),
+                  child: const Text("Salvar Objeto"),
                 ),
               ),
             ],

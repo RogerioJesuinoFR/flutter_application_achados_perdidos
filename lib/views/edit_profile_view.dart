@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../viewmodels/app_viewmodel.dart';
-import '../models/user_model.dart';
 
 class EditProfileView extends StatefulWidget {
   const EditProfileView({super.key});
@@ -15,25 +14,32 @@ class _EditProfileViewState extends State<EditProfileView> {
   late TextEditingController _nomeController;
   late TextEditingController _emailController;
   late TextEditingController _senhaController;
+  late TextEditingController _raController;
 
   @override
   void initState() {
     super.initState();
-    // Carrega os dados do usuário atual nos controladores quando a tela abre
     final usuarioAtual = AppViewModel.currentUser;
     _nomeController = TextEditingController(text: usuarioAtual?.nome ?? '');
     _emailController = TextEditingController(text: usuarioAtual?.email ?? '');
     _senhaController = TextEditingController(text: usuarioAtual?.senha ?? '');
+    _raController = TextEditingController(text: usuarioAtual?.ra ?? '');
+  }
+
+  bool _validarSenhaForte(String senha) {
+    final regex = RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$');
+    return regex.hasMatch(senha);
   }
 
   void _salvarPerfil() {
     if (_formKey.currentState!.validate()) {
-      // Atualiza os dados do usuário no ViewModel
-      AppViewModel.currentUser = Usuario(
-        nome: _nomeController.text,
-        email: _emailController.text,
-        senha: _senhaController.text,
-      );
+      final usuarioAtual = AppViewModel.currentUser;
+
+      if (usuarioAtual != null) {
+        usuarioAtual.nome = _nomeController.text;
+        usuarioAtual.email = _emailController.text;
+        usuarioAtual.senha = _senhaController.text;
+      }
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -42,7 +48,6 @@ class _EditProfileViewState extends State<EditProfileView> {
         ),
       );
 
-      // Volta para a tela anterior (Home) enviando "true" para avisar que houve mudança
       Navigator.pop(context, true);
     }
   }
@@ -52,6 +57,7 @@ class _EditProfileViewState extends State<EditProfileView> {
     _nomeController.dispose();
     _emailController.dispose();
     _senhaController.dispose();
+    _raController.dispose();
     super.dispose();
   }
 
@@ -71,6 +77,7 @@ class _EditProfileViewState extends State<EditProfileView> {
             children: [
               const Icon(Icons.account_circle, size: 80, color: Colors.blue),
               const SizedBox(height: 20),
+              
               TextFormField(
                 controller: _nomeController,
                 decoration: const InputDecoration(
@@ -81,6 +88,20 @@ class _EditProfileViewState extends State<EditProfileView> {
                 validator: (value) => value == null || value.isEmpty ? "Informe seu nome" : null,
               ),
               const SizedBox(height: 15),
+
+              TextFormField(
+                controller: _raController,
+                enabled: false,
+                decoration: InputDecoration(
+                  labelText: "RA (Não pode ser alterado)",
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.badge),
+                  fillColor: Colors.grey.shade200,
+                  filled: true,
+                ),
+              ),
+              const SizedBox(height: 15),
+
               TextFormField(
                 controller: _emailController,
                 decoration: const InputDecoration(
@@ -91,22 +112,30 @@ class _EditProfileViewState extends State<EditProfileView> {
                 keyboardType: TextInputType.emailAddress,
                 validator: (value) {
                   if (value == null || value.isEmpty) return "Informe seu e-mail";
-                  if (!value.contains("@")) return "E-mail inválido";
+                  if (!value.contains("@") || !value.contains(".")) return "E-mail inválido";
                   return null;
                 },
               ),
               const SizedBox(height: 15),
+
               TextFormField(
                 controller: _senhaController,
                 decoration: const InputDecoration(
                   labelText: "Nova Senha",
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.lock),
+                  helperText: "Mín. 8 caracteres, 1 Maiúscula, 1 Minúscula, 1 Número e 1 Símbolo",
+                  helperMaxLines: 2,
                 ),
                 obscureText: true,
-                validator: (value) => value == null || value.length < 6 ? "Mínimo de 6 caracteres" : null,
+                validator: (value) {
+                  if (value == null || value.isEmpty) return "Informe a senha";
+                  if (!_validarSenhaForte(value)) return "A senha não atende aos requisitos de segurança";
+                  return null;
+                },
               ),
               const SizedBox(height: 30),
+
               SizedBox(
                 width: double.infinity,
                 height: 50,
