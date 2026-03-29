@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../viewmodels/app_viewmodel.dart';
+import '../views/add_item_view.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -70,10 +71,15 @@ class _HomeViewState extends State<HomeView> {
             ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // Aqui chamaremos a tela de Cadastro de Objeto no futuro
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Em breve: Tela de adicionar objeto!')),
-          );
+          // Navega para a tela de adicionar item
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const AddItemView()),
+          ).then((_) {
+            // Quando a tela AddItemView fechar, isso aqui é executado
+            // Ele força a Home a reconstruir e mostrar os itens atualizados
+            setState(() {}); 
+          });
         },
         backgroundColor: Colors.blue,
         child: const Icon(Icons.add, color: Colors.white),
