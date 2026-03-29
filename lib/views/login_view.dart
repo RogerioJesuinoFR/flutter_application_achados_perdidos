@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../viewmodels/app_viewmodel.dart';
 import '../models/user_model.dart';
 import '../views/register_view.dart';
+import '../views/home_view.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -16,19 +17,21 @@ class _LoginViewState extends State<LoginView> {
   final _passwordController = TextEditingController();
 
   void _tentarLogin() {
-    if (_formKey.currentState!.validate()) {
-      AppViewModel.currentUser = Usuario(
-        nome: "Usuário Teste", 
-        email: _emailController.text, 
-        senha: _passwordController.text
-      );
+  if (_formKey.currentState!.validate()) {
+    // Simulação: Salva o usuário no ViewModel
+    AppViewModel.currentUser = Usuario(
+      nome: "Usuário Teste", 
+      email: _emailController.text, 
+      senha: _passwordController.text
+    );
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Login realizado com sucesso!')),
-      );
-
-    }
+    // Navega para a Home (e impede que o botão 'voltar' do celular feche o app)
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const HomeView()),
+    );
   }
+}
 
   @override
   Widget build(BuildContext context) {
