@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../viewmodels/app_viewmodel.dart';
 import '../views/add_item_view.dart';
+import '../views/edit_profile_view.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -23,12 +24,28 @@ class _HomeViewState extends State<HomeView> {
         backgroundColor: Colors.blue,
         foregroundColor: Colors.white,
         actions: [
+          // BOTÃO NOVO DE EDITAR PERFIL
+          IconButton(
+            icon: const Icon(Icons.manage_accounts),
+            onPressed: () async {
+              // Espera a tela de edição fechar para ver se precisa atualizar a Home
+              final atualizou = await Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const EditProfileView()),
+              );
+
+              // Se o usuário salvou o perfil (retornou true), atualiza a Home
+              if (atualizou == true) {
+                setState(() {});
+              }
+            },
+          ),
+          // BOTÃO DE LOGOUT QUE JÁ EXISTIA
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () {
-              // Limpa o usuário logado e volta pro login
               AppViewModel.currentUser = null;
-              Navigator.pop(context); // Fecha a Home e volta pro Login
+              Navigator.pop(context);
             },
           )
         ],
