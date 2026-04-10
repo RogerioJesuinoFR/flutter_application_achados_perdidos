@@ -7,4 +7,4 @@ class Usuario {
   String senha; 
 
   Usuario({required this.nome, required this.ra, required this.email, required this.senha}); 
-} 
+}   
