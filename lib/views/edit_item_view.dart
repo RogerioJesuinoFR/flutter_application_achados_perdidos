@@ -69,39 +69,40 @@ class _EditItemViewState extends State<EditItemView> {
           )
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              TextFormField(
-                controller: _nomeController,
-                decoration: const InputDecoration(labelText: "Nome", border: OutlineInputBorder()),
-                validator: (value) => value == null || value.isEmpty ? "Informe o nome" : null,
-              ),
-              const SizedBox(height: 15),
-              TextFormField(
-                controller: _descController,
-                maxLines: 3,
-                decoration: const InputDecoration(labelText: "Descrição", border: OutlineInputBorder()),
-              ),
-              const SizedBox(height: 20),
+
+      body: SingleChildScrollView( 
+        padding: const EdgeInsets.all(16.0), 
+        child: Form( 
+          key: _formKey, 
+          child: Column( 
+            children: [ 
+              TextFormField( 
+                controller: _nomeController, 
+                decoration: const InputDecoration(labelText: "Nome", border: OutlineInputBorder()), 
+                validator: (value) => value == null || value.isEmpty ? "Informe o nome" : null, 
+              ), 
+              const SizedBox(height: 15), 
+              TextFormField( 
+                controller: _descController, 
+                maxLines: 3, 
+                decoration: const InputDecoration(labelText: "Descrição", border: OutlineInputBorder()), 
+              ), 
+              const SizedBox(height: 20), 
               SwitchListTile(
                 title: Text(_isPerdido ? "PERDIDO" : "ACHADO", style: TextStyle(color: _isPerdido ? Colors.red : Colors.green, fontWeight: FontWeight.bold)),
-                value: _isPerdido,
-                activeColor: Colors.red,
-                onChanged: (value) => setState(() => _isPerdido = value),
-              ),
-              const SizedBox(height: 30),
-              ElevatedButton(
-                onPressed: _atualizarItem,
-                child: const Text("Salvar Alterações"),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+                value: _isPerdido, 
+                activeColor: Colors.red, 
+                onChanged: (value) => setState(() => _isPerdido = value), 
+              ), 
+              const SizedBox(height: 30), 
+              ElevatedButton( 
+                onPressed: _atualizarItem, 
+                child: const Text("Salvar Alterações"), 
+              ), 
+            ], 
+          ), 
+        ), 
+      ), 
+    ); 
+  } 
 }
