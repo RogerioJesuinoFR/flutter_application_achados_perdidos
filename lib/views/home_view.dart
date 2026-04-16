@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import '../viewmodels/app_viewmodel.dart';
 import '../models/item_model.dart';
@@ -85,12 +86,14 @@ class _HomeViewState extends State<HomeView> {
                   margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   child: ListTile(
                     leading: item.imagePath != null
-                        ? ClipRRect(
-                            borderRadius: BorderRadius.circular(5),
-                            child: Image.file(File(item.imagePath!), width: 50, height: 50, fit: BoxFit.cover),
-                          )
-                        : Icon(item.status ? Icons.search_off : Icons.check_circle, 
-                               color: item.status ? Colors.red : Colors.green, size: 40),
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(5),
+                          child: kIsWeb 
+                              ? Image.network(item.imagePath!, width: 50, height: 50, fit: BoxFit.cover) // Renderiza na WEB
+                              : Image.file(File(item.imagePath!), width: 50, height: 50, fit: BoxFit.cover), // Renderiza no CELULAR
+                        )
+                      : Icon(item.status ? Icons.search_off : Icons.check_circle, 
+                            color: item.status ? Colors.red : Colors.green, size: 40),
                     
                     title: Text(item.nomeItem, style: const TextStyle(fontWeight: FontWeight.bold)),
                     subtitle: Text(isMeuItem ? "Cadastrado por você" : "Cadastrado por outro aluno"),
