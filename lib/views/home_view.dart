@@ -16,10 +16,10 @@ class HomeView extends StatefulWidget {
 }
 
 class _HomeViewState extends State<HomeView> {
-  
+
   void _mostrarContatoDono(ItemPerdido item) {
     final dono = AppViewModel.buscarUsuarioPorRa(item.ownerRa);
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -50,7 +50,7 @@ class _HomeViewState extends State<HomeView> {
   @override
   Widget build(BuildContext context) {
     final usuario = AppViewModel.currentUser;
-    final itens = AppViewModel.items;
+    final itens = AppViewModel.itemsBox.values.toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -101,12 +101,12 @@ class _HomeViewState extends State<HomeView> {
                       item.status ? "Perdido" : "Achado",
                       style: TextStyle(color: item.status ? Colors.red : Colors.green, fontWeight: FontWeight.bold),
                     ),
-                    
                     onTap: () async {
                       if (isMeuItem) {
+                        final key = AppViewModel.itemsBox.keyAt(index);
                         final atualizou = await Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => EditItemView(item: item, index: index)),
+                          MaterialPageRoute(builder: (context) => EditItemView(item: item, itemKey: key)),
                         );
                         if (atualizou == true) setState(() {});
                       } else {
