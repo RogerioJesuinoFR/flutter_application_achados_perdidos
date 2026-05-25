@@ -16,32 +16,28 @@ class HomeView extends StatefulWidget {
 }
 
 class _HomeViewState extends State<HomeView> {
-
   void _mostrarContatoDono(ItemPerdido item) {
     final dono = AppViewModel.buscarUsuarioPorRa(item.ownerRa);
-
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text("Entrar em Contato"),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [Icon(Icons.contact_mail, color: Colors.indigo), SizedBox(width: 10), Text("Contato")],
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Este item foi cadastrado por:", style: TextStyle(color: Colors.grey[700])),
+            const Text("Dono do item:", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
             const SizedBox(height: 10),
-            Text("👤 Nome: ${dono?.nome ?? 'Desconhecido'}", style: const TextStyle(fontWeight: FontWeight.bold)),
+            Text("👤 Nome: ${dono?.nome ?? 'Desconhecido'}"),
             Text("🎓 RA: ${dono?.ra ?? 'N/A'}"),
             Text("📧 E-mail: ${dono?.email ?? 'N/A'}"),
-            const SizedBox(height: 20),
-            const Text("Envie um e-mail para combinar a devolução/retirada!", style: TextStyle(fontStyle: FontStyle.italic)),
           ],
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Fechar"),
-          )
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Fechar")),
         ],
       ),
     );
@@ -54,53 +50,95 @@ class _HomeViewState extends State<HomeView> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Achados e Perdidos"),
+        title: const Text("Achados & Perdidos", style: TextStyle(fontWeight: FontWeight.bold)),
         actions: [
           IconButton(
             icon: const Icon(Icons.person),
-            tooltip: "Editar Perfil",
             onPressed: () async {
               await Navigator.push(context, MaterialPageRoute(builder: (context) => const EditProfileView()));
               setState(() {});
             },
           ),
           IconButton(
-            icon: const Icon(Icons.exit_to_app),
-            tooltip: "Sair",
+            icon: const Icon(Icons.logout),
             onPressed: () {
-              AppViewModel.fazerLogout(); // AQUI: Chamada atualizada para limpar o banco da sessão
+              AppViewModel.fazerLogout();
               Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LoginView()));
             },
           )
         ],
       ),
       body: itens.isEmpty
-          ? const Center(child: Text("Nenhum objeto cadastrado na faculdade ainda."))
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.inbox_outlined, size: 80, color: Colors.grey.shade400),
+                  const SizedBox(height: 15),
+                  Text("Nenhum objeto registrado ainda.", style: TextStyle(color: Colors.grey.shade600, fontSize: 16)),
+                ],
+              ),
+            )
           : ListView.builder(
+              padding: const EdgeInsets.all(12),
               itemCount: itens.length,
               itemBuilder: (context, index) {
                 final item = itens[index];
                 final isMeuItem = item.ownerRa == usuario?.ra;
 
                 return Card(
-                  margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  margin: const EdgeInsets.only(bottom: 12),
                   child: ListTile(
-                    leading: item.imagePath != null
-                      ? ClipRRect(
-                          borderRadius: BorderRadius.circular(5),
-                          child: kIsWeb 
-                              ? Image.network(item.imagePath!, width: 50, height: 50, fit: BoxFit.cover) 
-                              : Image.file(File(item.imagePath!), width: 50, height: 50, fit: BoxFit.cover), 
-                        )
-                      : Icon(item.status ? Icons.search_off : Icons.check_circle, 
-                            color: item.status ? Colors.red : Colors.green, size: 40),
-                    
-                    title: Text(item.nomeItem, style: const TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: Text(isMeuItem ? "Cadastrado por você" : "Cadastrado por outro aluno"),
-                    trailing: Text(
-                      item.status ? "Perdido" : "Achado",
-                      style: TextStyle(color: item.status ? Colors.red : Colors.green, fontWeight: FontWeight.bold),
+                    contentPadding: const EdgeInsets.all(12),
+                    leading: Container(
+                      width: 60,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade200,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: item.imagePath != null
+                          ? ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: kIsWeb
+                                  ? Image.network(item.imagePath!, fit: BoxFit.cover)
+                                  : Image.file(File(item.imagePath!), fit: BoxFit.cover),
+                            )
+                          : Icon(item.status ? Icons.search_off : Icons.check_circle,
+                              color: item.status ? Colors.redAccent : Colors.green, size: 35),
                     ),
+                    title: Text(item.nomeItem, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    subtitle: Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: item.status ? Colors.red.shade100 : Colors.green.shade100,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              item.status ? "PERDIDO" : "ACHADO",
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: item.status ? Colors.red.shade700 : Colors.green.shade700,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              isMeuItem ? "Seu item" : "De outro aluno",
+                              style: TextStyle(fontSize: 12, color: Colors.grey.shade600, fontStyle: FontStyle.italic),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    trailing: isMeuItem ? const Icon(Icons.edit, color: Colors.indigo) : const Icon(Icons.chat_bubble_outline),
                     onTap: () async {
                       if (isMeuItem) {
                         final key = AppViewModel.itemsBox.keyAt(index);
@@ -117,12 +155,13 @@ class _HomeViewState extends State<HomeView> {
                 );
               },
             ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
-          Navigator.push(context, MaterialPageRoute(builder: (context) => const AddItemView()))
-              .then((_) => setState(() {}));
+          Navigator.push(context, MaterialPageRoute(builder: (context) => const AddItemView())).then((_) => setState(() {}));
         },
-        child: const Icon(Icons.add),
+        backgroundColor: Colors.orangeAccent, // Destaque para o botão de adicionar
+        icon: const Icon(Icons.add),
+        label: const Text("Novo Item", style: TextStyle(fontWeight: FontWeight.bold)),
       ),
     );
   }

@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart' show kIsWeb; // NOVO: Para detectar a Web
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:image_picker/image_picker.dart';
 import '../viewmodels/app_viewmodel.dart';
 
@@ -17,7 +17,7 @@ class _AddItemViewState extends State<AddItemView> {
   final _descController = TextEditingController();
   bool _isPerdido = true;
   
-  XFile? _imageFile; // MODIFICADO: Usamos XFile em vez de File para funcionar na Web
+  XFile? _imageFile;
   final ImagePicker _picker = ImagePicker();
 
   Future<void> _pegarImagem(ImageSource source) async {
@@ -35,7 +35,7 @@ class _AddItemViewState extends State<AddItemView> {
         _nomeController.text,
         _descController.text,
         _isPerdido,
-        _imageFile?.path, // Envia o caminho
+        _imageFile?.path,
       );
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -55,7 +55,6 @@ class _AddItemViewState extends State<AddItemView> {
           key: _formKey,
           child: Column(
             children: [
-              // ÁREA DA FOTO ADAPTADA PARA WEB
               Container(
                 height: 150,
                 width: double.infinity,
@@ -66,9 +65,7 @@ class _AddItemViewState extends State<AddItemView> {
                 ),
                 child: _imageFile != null
                     ? (kIsWeb 
-                        // Se for Web, renderiza assim
                         ? Image.network(_imageFile!.path, fit: BoxFit.cover) 
-                        // Se for Celular, renderiza assim
                         : Image.file(File(_imageFile!.path), fit: BoxFit.cover))
                     : const Icon(Icons.image, size: 50, color: Colors.grey),
               ),
