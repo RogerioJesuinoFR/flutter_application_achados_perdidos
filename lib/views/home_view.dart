@@ -68,7 +68,7 @@ class _HomeViewState extends State<HomeView> {
             icon: const Icon(Icons.exit_to_app),
             tooltip: "Sair",
             onPressed: () {
-              AppViewModel.currentUser = null;
+              AppViewModel.fazerLogout(); // AQUI: Chamada atualizada para limpar o banco da sessão
               Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LoginView()));
             },
           )
@@ -89,8 +89,8 @@ class _HomeViewState extends State<HomeView> {
                       ? ClipRRect(
                           borderRadius: BorderRadius.circular(5),
                           child: kIsWeb 
-                              ? Image.network(item.imagePath!, width: 50, height: 50, fit: BoxFit.cover) // Renderiza na WEB
-                              : Image.file(File(item.imagePath!), width: 50, height: 50, fit: BoxFit.cover), // Renderiza no CELULAR
+                              ? Image.network(item.imagePath!, width: 50, height: 50, fit: BoxFit.cover) 
+                              : Image.file(File(item.imagePath!), width: 50, height: 50, fit: BoxFit.cover), 
                         )
                       : Icon(item.status ? Icons.search_off : Icons.check_circle, 
                             color: item.status ? Colors.red : Colors.green, size: 40),

@@ -5,7 +5,17 @@ import '../models/user_model.dart';
 class AppViewModel {
   static Box<ItemPerdido> get itemsBox => Hive.box<ItemPerdido>('items');
   static Box<Usuario> get usuariosBox => Hive.box<Usuario>('usuarios');
+  static Box get sessaoBox => Hive.box('sessao'); // NOVO: Banco para salvar o login
+  
   static Usuario? currentUser;
+
+  // NOVO: Verifica se o usuário já estava logado ao abrir o app
+  static void carregarSessao() {
+    String? loggedRa = sessaoBox.get('usuario_logado');
+    if (loggedRa != null) {
+      currentUser = buscarUsuarioPorRa(loggedRa);
+    }
+  }
 
   static String? registrarUsuario(String nome, String ra, String email, String senha) {
     if (usuariosBox.values.any((u) => u.ra == ra)) {
@@ -18,10 +28,17 @@ class AppViewModel {
   static bool fazerLogin(String ra, String senha) {
     try {
       currentUser = usuariosBox.values.firstWhere((u) => u.ra == ra && u.senha == senha);
+      sessaoBox.put('usuario_logado', ra); // NOVO: Salva o RA no banco para manter o login
       return true;
     } catch (e) {
       return false;
     }
+  }
+
+  // NOVO: Função para deslogar com segurança
+  static void fazerLogout() {
+    currentUser = null;
+    sessaoBox.delete('usuario_logado');
   }
 
   static Usuario? buscarUsuarioPorRa(String ra) {
